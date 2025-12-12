@@ -68,3 +68,26 @@ def test_update_sweet_success():
     assert body["name"] == "Kaju Barfi"
     assert body["price"] == 25.0
     assert body["quantity"] == 35
+
+
+def test_delete_sweet_success():
+    # create sweet
+    create_res = client.post("/api/sweets", json={
+        "name": "Rasgulla",
+        "category": "Indian",
+        "price": 12.0,
+        "quantity": 20
+    })
+
+    sweet_id = create_res.json()["id"]
+
+    # delete sweet
+    delete_res = client.delete(f"/api/sweets/{sweet_id}")
+
+    assert delete_res.status_code == 200
+    assert delete_res.json()["detail"] == "Sweet deleted"
+
+    # verify sweet is gone
+    list_res = client.get("/api/sweets")
+    sweets = list_res.json()
+    assert all(s["id"] != sweet_id for s in sweets)

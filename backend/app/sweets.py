@@ -137,3 +137,16 @@ def update_sweet(sweet_id: int, payload: SweetUpdate):
         "quantity": sweet.quantity
     }
 
+@router.delete("/{sweet_id}")
+def delete_sweet(sweet_id: int):
+    db = get_db()
+
+    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
+
+    if not sweet:
+        return {"detail": "Sweet not found"}
+
+    db.delete(sweet)
+    db.commit()
+
+    return {"detail": "Sweet deleted"}
