@@ -18,6 +18,13 @@ class SweetCreate(BaseModel):
     price: float
     quantity: int
 
+class SweetUpdate(BaseModel):
+    name: str
+    category: str
+    price: float
+    quantity: int
+
+
 
 def get_db():
     db = SessionLocal()
@@ -103,3 +110,30 @@ def search_sweets(
         }
         for s in sweets
     ]
+
+
+@router.put("/{sweet_id}")
+def update_sweet(sweet_id: int, payload: SweetUpdate):
+    db = get_db()
+
+    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
+
+    if not sweet:
+        return {"detail": "Sweet not found"}
+
+    sweet.name = payload.name
+    sweet.category = payload.category
+    sweet.price = payload.price
+    sweet.quantity = payload.quantity
+
+    db.commit()
+    db.refresh(sweet)
+
+    return {
+        "id": sweet.id,
+        "name": sweet.name,
+        "category": sweet.category,
+        "price": sweet.price,
+        "quantity": sweet.quantity
+    }
+

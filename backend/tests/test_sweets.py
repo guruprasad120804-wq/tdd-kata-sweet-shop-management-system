@@ -42,3 +42,29 @@ def test_search_sweets_by_name():
     data = res.json()
     assert len(data) >= 1
     assert data[0]["name"] == "Jalebi"
+
+
+def test_update_sweet_success():
+    # create sweet
+    create_res = client.post("/api/sweets", json={
+        "name": "Barfi",
+        "category": "Indian",
+        "price": 20.0,
+        "quantity": 40
+    })
+
+    sweet_id = create_res.json()["id"]
+
+    # update sweet
+    update_res = client.put(f"/api/sweets/{sweet_id}", json={
+        "name": "Kaju Barfi",
+        "category": "Indian",
+        "price": 25.0,
+        "quantity": 35
+    })
+
+    assert update_res.status_code == 200
+    body = update_res.json()
+    assert body["name"] == "Kaju Barfi"
+    assert body["price"] == 25.0
+    assert body["quantity"] == 35
