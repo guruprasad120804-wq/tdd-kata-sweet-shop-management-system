@@ -5,3 +5,5 @@ python-jose
 passlib[bcrypt]
 pytest
 email-validator
+python-jose
+passlib[bcrypt]
