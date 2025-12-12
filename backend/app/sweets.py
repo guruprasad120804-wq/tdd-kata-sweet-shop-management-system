@@ -5,6 +5,10 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Sweet
 
+from typing import Optional
+from sqlalchemy import and_
+
+
 router = APIRouter(prefix="/api/sweets", tags=["sweets"])
 
 
@@ -51,6 +55,43 @@ def add_sweet(payload: SweetCreate):
 def list_sweets():
     db = get_db()
     sweets = db.query(Sweet).all()
+
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "category": s.category,
+            "price": s.price,
+            "quantity": s.quantity
+        }
+        for s in sweets
+    ]
+
+
+@router.get("/search")
+def search_sweets(
+    name: Optional[str] = None,
+    category: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None
+):
+    db = get_db()
+
+    query = db.query(Sweet)
+
+    if name:
+        query = query.filter(Sweet.name.ilike(f"%{name}%"))
+
+    if category:
+        query = query.filter(Sweet.category == category)
+
+    if min_price is not None:
+        query = query.filter(Sweet.price >= min_price)
+
+    if max_price is not None:
+        query = query.filter(Sweet.price <= max_price)
+
+    sweets = query.all()
 
     return [
         {

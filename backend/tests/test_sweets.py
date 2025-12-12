@@ -24,3 +24,21 @@ def test_list_sweets():
 
     assert res.status_code == 200
     assert isinstance(res.json(), list)
+
+
+def test_search_sweets_by_name():
+    # add a sweet
+    client.post("/api/sweets", json={
+        "name": "Jalebi",
+        "category": "Indian",
+        "price": 15.0,
+        "quantity": 30
+    })
+
+    # search by name
+    res = client.get("/api/sweets/search?name=Jale")
+
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) >= 1
+    assert data[0]["name"] == "Jalebi"
