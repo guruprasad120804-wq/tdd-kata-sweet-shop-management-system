@@ -91,3 +91,42 @@ def test_delete_sweet_success():
     list_res = client.get("/api/sweets")
     sweets = list_res.json()
     assert all(s["id"] != sweet_id for s in sweets)
+
+
+def test_purchase_sweet_success():
+    # create sweet
+    res = client.post("/api/sweets", json={
+        "name": "Peda",
+        "category": "Indian",
+        "price": 8.0,
+        "quantity": 5
+    })
+    sweet_id = res.json()["id"]
+
+    # purchase sweet
+    purchase_res = client.post(f"/api/sweets/{sweet_id}/purchase")
+
+    assert purchase_res.status_code == 200
+    body = purchase_res.json()
+    assert body["quantity"] == 4
+
+
+def test_restock_sweet_success():
+    # create sweet
+    res = client.post("/api/sweets", json={
+        "name": "Halwa",
+        "category": "Indian",
+        "price": 10.0,
+        "quantity": 3
+    })
+    sweet_id = res.json()["id"]
+
+    # restock sweet
+    restock_res = client.post(
+        f"/api/sweets/{sweet_id}/restock",
+        json={"amount": 5}
+    )
+
+    assert restock_res.status_code == 200
+    body = restock_res.json()
+    assert body["quantity"] == 8

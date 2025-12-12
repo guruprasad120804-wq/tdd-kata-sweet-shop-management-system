@@ -23,6 +23,9 @@ class SweetUpdate(BaseModel):
     category: str
     price: float
     quantity: int
+    
+class RestockRequest(BaseModel):
+    amount: int
 
 
 
@@ -150,3 +153,46 @@ def delete_sweet(sweet_id: int):
     db.commit()
 
     return {"detail": "Sweet deleted"}
+
+
+@router.post("/{sweet_id}/purchase")
+def purchase_sweet(sweet_id: int):
+    db = get_db()
+
+    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
+
+    if not sweet:
+        return {"detail": "Sweet not found"}
+
+    if sweet.quantity <= 0:
+        return {"detail": "Out of stock"}
+
+    sweet.quantity -= 1
+    db.commit()
+    db.refresh(sweet)
+
+    return {
+        "id": sweet.id,
+        "quantity": sweet.quantity
+    }
+
+@router.post("/{sweet_id}/restock")
+def restock_sweet(sweet_id: int, payload: RestockRequest):
+    db = get_db()
+
+    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
+
+    if not sweet:
+        return {"detail": "Sweet not found"}
+
+    if payload.amount <= 0:
+        return {"detail": "Invalid restock amount"}
+
+    sweet.quantity += payload.amount
+    db.commit()
+    db.refresh(sweet)
+
+    return {
+        "id": sweet.id,
+        "quantity": sweet.quantity
+    }
