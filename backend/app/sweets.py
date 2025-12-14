@@ -1,40 +1,96 @@
-from fastapi import APIRouter, Depends, HTTPException
+"""
+Sweet management endpoints for the Sweet Shop API.
+
+This module contains all CRUD and inventory-related operations
+for sweets, including:
+- create
+- list
+- search
+- update
+- delete
+- purchase
+- restock
+
+Access control:
+- All endpoints require authentication
+- Some endpoints require admin privileges
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_admin, get_current_user
 from app.database import get_db
 from app.models import Sweet
-from app.schemas import SweetCreate, SweetUpdate, RestockRequest, PurchaseRequest
-from app.auth import get_current_user, get_current_admin
+from app.schemas import (
+    PurchaseRequest,
+    RestockRequest,
+    SweetCreate,
+    SweetUpdate,
+)
 
 router = APIRouter(prefix="/api/sweets", tags=["Sweets"])
 
 
-# Protected: Add sweet (any logged-in user or admin — you can switch to admin-only if needed)
-@router.post("", status_code=201)
+# -------------------------------------------------------------------
+# Helper utilities
+# -------------------------------------------------------------------
+def get_sweet_or_404(db: Session, sweet_id: int) -> Sweet:
+    """
+    Retrieve a sweet by ID or raise a 404 error.
+    """
+    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
+    if not sweet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sweet not found",
+        )
+    return sweet
+
+
+# -------------------------------------------------------------------
+# Create
+# -------------------------------------------------------------------
+@router.post("", status_code=status.HTTP_201_CREATED)
 def add_sweet(
     payload: SweetCreate,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
+    """
+    Create a new sweet item.
+
+    Any authenticated user can create a sweet.
+    (This can be restricted to admins if needed.)
+    """
     sweet = Sweet(
         name=payload.name,
         category=payload.category,
         price=payload.price,
         quantity=payload.quantity,
     )
+
     db.add(sweet)
     db.commit()
     db.refresh(sweet)
+
     return sweet
 
 
-# Protected: list sweets
+# -------------------------------------------------------------------
+# Read
+# -------------------------------------------------------------------
 @router.get("")
-def list_sweets(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def list_sweets(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """
+    Retrieve a list of all available sweets.
+    """
     return db.query(Sweet).all()
 
 
-# Protected: search by name/category/min_price/max_price
 @router.get("/search")
 def search_sweets(
     name: str | None = None,
@@ -44,21 +100,30 @@ def search_sweets(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    q = db.query(Sweet)
+    """
+    Search sweets by optional filters:
+    - name
+    - category
+    - minimum price
+    - maximum price
+    """
+    query = db.query(Sweet)
 
     if name:
-        q = q.filter(Sweet.name.ilike(f"%{name}%"))
+        query = query.filter(Sweet.name.ilike(f"%{name}%"))
     if category:
-        q = q.filter(Sweet.category.ilike(f"%{category}%"))
+        query = query.filter(Sweet.category.ilike(f"%{category}%"))
     if min_price is not None:
-        q = q.filter(Sweet.price >= min_price)
+        query = query.filter(Sweet.price >= min_price)
     if max_price is not None:
-        q = q.filter(Sweet.price <= max_price)
+        query = query.filter(Sweet.price <= max_price)
 
-    return q.all()
+    return query.all()
 
 
-# Protected: update sweet
+# -------------------------------------------------------------------
+# Update
+# -------------------------------------------------------------------
 @router.put("/{sweet_id}")
 def update_sweet(
     sweet_id: int,
@@ -66,9 +131,10 @@ def update_sweet(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
-    if not sweet:
-        raise HTTPException(status_code=404, detail="Sweet not found")
+    """
+    Update an existing sweet's details.
+    """
+    sweet = get_sweet_or_404(db, sweet_id)
 
     sweet.name = payload.name
     sweet.category = payload.category
@@ -77,26 +143,33 @@ def update_sweet(
 
     db.commit()
     db.refresh(sweet)
+
     return sweet
 
 
-# Protected: delete sweet (ADMIN ONLY)
+# -------------------------------------------------------------------
+# Delete (Admin only)
+# -------------------------------------------------------------------
 @router.delete("/{sweet_id}")
 def delete_sweet(
     sweet_id: int,
     db: Session = Depends(get_db),
     admin=Depends(get_current_admin),
 ):
-    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
-    if not sweet:
-        raise HTTPException(status_code=404, detail="Sweet not found")
+    """
+    Delete a sweet item (admin only).
+    """
+    sweet = get_sweet_or_404(db, sweet_id)
 
     db.delete(sweet)
     db.commit()
-    return {"detail": "Sweet deleted"}
+
+    return {"detail": "Sweet deleted successfully"}
 
 
-# Protected: purchase (decrease quantity) - any logged in user
+# -------------------------------------------------------------------
+# Inventory operations
+# -------------------------------------------------------------------
 @router.post("/{sweet_id}/purchase")
 def purchase_sweet(
     sweet_id: int,
@@ -104,21 +177,25 @@ def purchase_sweet(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
-    if not sweet:
-        raise HTTPException(status_code=404, detail="Sweet not found")
+    """
+    Purchase a sweet, decreasing its stock quantity.
+    """
+    sweet = get_sweet_or_404(db, sweet_id)
 
     amount = payload.amount or 1
     if sweet.quantity < amount:
-        raise HTTPException(status_code=400, detail="Not enough stock")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Not enough stock",
+        )
 
     sweet.quantity -= amount
     db.commit()
     db.refresh(sweet)
+
     return {"id": sweet.id, "quantity": sweet.quantity}
 
 
-# Protected: restock (increase quantity) - ADMIN ONLY
 @router.post("/{sweet_id}/restock")
 def restock_sweet(
     sweet_id: int,
@@ -126,11 +203,13 @@ def restock_sweet(
     db: Session = Depends(get_db),
     admin=Depends(get_current_admin),
 ):
-    sweet = db.query(Sweet).filter(Sweet.id == sweet_id).first()
-    if not sweet:
-        raise HTTPException(status_code=404, detail="Sweet not found")
+    """
+    Restock a sweet, increasing its stock quantity (admin only).
+    """
+    sweet = get_sweet_or_404(db, sweet_id)
 
     sweet.quantity += payload.amount
     db.commit()
     db.refresh(sweet)
+
     return {"id": sweet.id, "quantity": sweet.quantity}

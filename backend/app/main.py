@@ -1,4 +1,5 @@
 
+
 # # {
 # #   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlzX2FkbWluIjp0cnVlLCJleHAiOjE3NjU1NjI1MTZ9.IWbzbQaJAZI-nesapytziKBaqF-hPn8aQIoF-qy6rGM",
 # #   "token_type": "bearer"
@@ -34,5 +35,3 @@ app.include_router(sweets_router)
 @app.get("/")
 def root():
     return {"message": "Sweet Shop API running"}
-
-
