@@ -244,3 +244,33 @@ All core logic, implementation decisions, and debugging were performed by me. AI
 ### Reflection on AI Impact
 
 Using AI significantly improved my development workflow by reducing time spent on repetitive research and helping me reason through architectural and debugging challenges more efficiently. It acted as a knowledgeable reviewer rather than a code generator, allowing me to maintain full ownership of the solution while improving overall code quality and confidence.
+
+---
+
+## 🧪 Test Report
+
+The backend was developed following Test-Driven Development (TDD) principles.
+All automated tests were executed using **pytest**.
+
+**Test Summary:**
+- Total tests executed: **8**
+- Result: **All tests passed**
+- Execution time: ~6.5 seconds
+
+⚠️ A deprecation warning related to `crypt` (Python 3.13) is shown by `passlib`
+and does not affect functionality or test correctness.
+
+📄 Full test output:
+- [backend/TEST_REPORT.txt](backend/TEST_REPORT.txt)
+
+---
+## 🌍 Live Demo (Optional - Brownie Points )
+
+Frontend application deployed on **Vercel**:
+
+🔗 https://sweet-shop-frontend-igqdtp76l-guruprasad120804-wqs-projects.vercel.app/
+
+**Note:**  
+The FastAPI backend is designed to run locally.  
+Authentication and API features work when the backend is running locally.
+The deployed frontend is provided for UI demonstration purposes.
