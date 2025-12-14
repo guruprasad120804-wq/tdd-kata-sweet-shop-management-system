@@ -1,14 +1,22 @@
+/* =========================================================
+    Global Reset & Base Styles
+   ========================================================= */
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  overflow-x: hidden;
 }
 
-/* ================= BACKGROUND ================= */
+/* =========================================================
+    Application Background
+   ========================================================= */
+
 .app-bg {
   min-height: 100vh;
   width: 100%;
@@ -18,7 +26,7 @@ body {
       rgba(0, 0, 0, 0.35),
       rgba(0, 0, 0, 0.35)
     ),
-    url("https://i.postimg.cc/FzdjRpH0/c6005df6-6860-4cd7-9fbc-d79c3937f4fd-(1).jpg"); 
+    url("https://i.postimg.cc/FzdjRpH0/c6005df6-6860-4cd7-9fbc-d79c3937f4fd-(1).jpg");
 
   background-repeat: no-repeat;
   background-position: center;
@@ -32,7 +40,10 @@ body {
   align-items: flex-start;
 }
 
-/* ================= LOGIN CARD ================= */
+/* =========================================================
+    Login Card
+   ========================================================= */
+
 .login-card {
   width: 420px;
   max-width: 100%;
@@ -48,7 +59,10 @@ body {
   color: #fff;
 }
 
-/* ================= DASHBOARD WRAPPER ================= */
+/* =========================================================
+    Dashboard Layout
+   ========================================================= */
+
 .dashboard-container {
   width: 100%;
   max-width: 1400px;
@@ -59,7 +73,10 @@ body {
   gap: 24px;
 }
 
-/* ================= GLASS SECTIONS ================= */
+/* =========================================================
+    Glass Effect Containers
+   ========================================================= */
+
 .glass-card {
   padding: 24px;
   border-radius: 16px;
@@ -72,7 +89,10 @@ body {
   color: #fff;
 }
 
-/* ================= MUI OVERRIDES ================= */
+/* =========================================================
+    Material UI Overrides
+   ========================================================= */
+
 .MuiCard-root {
   border-radius: 16px !important;
 }
@@ -81,21 +101,25 @@ body {
   border-radius: 14px;
 }
 
-.MuiButton-contained {
-  font-weight: 600;
-  text-transform: none;
-}
-
+.MuiButton-contained,
 .MuiButton-outlined {
   text-transform: none;
 }
 
-/* ================= SWEET CARDS ================= */
+.MuiButton-contained {
+  font-weight: 600;
+}
+
+/* =========================================================
+    Sweet Cards
+   ========================================================= */
+
 .sweet-card {
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
   background: linear-gradient(180deg, #ffffff, #f9f9f9);
 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -106,20 +130,20 @@ body {
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
 }
 
-/* ================= PAGINATION ================= */
+/* =========================================================
+    Pagination
+   ========================================================= */
+
 .MuiPagination-root {
   background: rgba(255, 255, 255, 0.85);
   padding: 12px 20px;
   border-radius: 14px;
 }
 
-/* ================= SCROLL FIX ================= */
-html,
-body {
-  overflow-x: hidden;
-}
+/* =========================================================
+    Responsive Adjustments
+   ========================================================= */
 
-/* ================= RESPONSIVE ================= */
 @media (max-width: 900px) {
   .dashboard-container {
     max-width: 100%;
@@ -135,4 +159,3 @@ body {
     padding: 24px 12px;
   }
 }
-

@@ -26,64 +26,81 @@ import "./App.css";
 import { apiRequest, setToken } from "./api";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
+const CATEGORIES = [
+  "Indian",
+  "Chocolate",
+  "Bakery",
+  "Candy",
+  "Dessert",
+  "General",
+];
+
+const CATEGORY_COLORS = {
+  Indian: "#FF5C00",
+  Chocolate: "#5D4037",
+  Bakery: "#F9A825",
+  Candy: "#D81B60",
+  Dessert: "#6A1B9A",
+  General: "#546E7A",
+};
+
+const ITEMS_PER_PAGE = 6;
 
 function App() {
-  const CATEGORIES = [
-    "Indian",
-    "Chocolate",
-    "Bakery",
-    "Candy",
-    "Dessert",
-    "General",
-  ];
-
-  // ---------- AUTH ----------
-  const [mode, setMode] = useState("login"); // login | register
+    // ------------------------------------------------------------------
+  // Auth state
+  // ------------------------------------------------------------------
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ---------- SWEETS ----------
+  // ------------------------------------------------------------------
+  // Sweet & inventory state
+  // ------------------------------------------------------------------
   const [sweets, setSweets] = useState([]);
   const [name, setName] = useState("");
+  const [category, setCategory] = useState("General");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
-  //------
-  const ITEMS_PER_PAGE = 6;
+
+  // ------------------------------------------------------------------
+  // Pagination
+  // ------------------------------------------------------------------
   const [page, setPage] = useState(1);
+  const totalPages = Math.ceil((sweets?.length || 0) / ITEMS_PER_PAGE);
 
-  const totalPages = Math.ceil(sweets.length / ITEMS_PER_PAGE);
-
-  const paginatedSweets = sweets.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
-
-  const [restockAmounts, setRestockAmounts] = useState({});
-
-
-
-  // ---------- EDIT SWEET ----------
+  // ------------------------------------------------------------------
+  // Editing & restocking
+  // ------------------------------------------------------------------
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
+  const [editCategory, setEditCategory] = useState("General");
+  const [restockAmounts, setRestockAmounts] = useState({});
 
-  // ---------- SEARCH ----------
+  // ------------------------------------------------------------------
+  // Search & filters
+  // ------------------------------------------------------------------
   const [searchName, setSearchName] = useState("");
   const [searchCategory, setSearchCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
-  //--add 
-  const [category, setCategory] = useState("General");
-
-  const [editCategory, setEditCategory] = useState("General");
-
+  // ------------------------------------------------------------------
+  // Cart state
+  // ------------------------------------------------------------------
+  const [cart, setCart] = useState([]);
   const [cartQuantities, setCartQuantities] = useState({});
-
   const [showCart, setShowCart] = useState(false);
+
+  const paginatedSweets = (sweets || []).slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+
 
   // ---------- RESTORE LOGIN ----------
   useEffect(() => {
@@ -96,7 +113,6 @@ function App() {
       setEmail(savedEmail);
       setIsAdmin(savedAdmin === "true");
       setLoggedIn(true);
-      loadSweets();
     }
   }, []);
 
@@ -140,6 +156,11 @@ function App() {
       alert("Registration failed");
     }
   }
+  async function refreshAfter(action) {
+    await action();
+    loadSweets();
+  }
+
 
   function logout() {
     localStorage.removeItem("token");
@@ -194,8 +215,9 @@ function App() {
   }
 
   async function deleteSweet(id) {
-    await apiRequest(`/api/sweets/${id}`, { method: "DELETE" });
-    loadSweets();
+  refreshAfter(() =>
+    apiRequest(`/api/sweets/${id}`, { method: "DELETE" })
+);
   }
 
   async function saveEdit(id) {
@@ -232,15 +254,6 @@ function App() {
 
 
 
-  const CATEGORY_COLORS = {
-    Indian: "#FF5C00",     // Deep green
-    Chocolate: "#5D4037",  // Chocolate brown
-    Bakery: "#F9A825",     // Warm yellow
-    Candy: "#D81B60",      // Pink
-    Dessert: "#6A1B9A",    // Purple
-    General: "#546E7A",    // Neutral blue-grey
-  };
-  const [cart, setCart] = useState([]);
 
 
   function increaseQty(id, maxQty) {
@@ -376,13 +389,6 @@ function App() {
 
               <Typography variant="body2">{email}</Typography>
 
-              {/* 🛒 CART BUTTON */}
-              {/* <Button
-                color="inherit"
-                onClick={() => setShowCart(true)}
-              >
-                Cart ({cart.length})
-              </Button> */}
               <IconButton color="inherit" onClick={() => setShowCart(true)}>
                 <Badge badgeContent={cart.length} color="error">
                   <ShoppingCartIcon />
@@ -406,59 +412,6 @@ function App() {
         >
           Logged in as <b>{email}</b> {isAdmin && "(Admin)"}
         </Typography>
-
-        {/* {showCart && (
-          <Card sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h6" mb={2}>
-              🛒 Cart
-            </Typography>
-
-            {cart.length === 0 ? (
-              <Typography>No items in cart</Typography>
-            ) : (
-              <>
-                {cart.map((item) => (
-                  <Stack
-                    key={item.id}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={1}
-                  >
-                    <Typography>
-                      {item.name} × {item.qty}
-                    </Typography>
-                    <Typography>₹{item.price * item.qty}</Typography>
-                  </Stack>
-                ))}
-
-                <Divider sx={{ my: 2 }} />
-
-                <Typography fontWeight="bold" textAlign="right">
-                  Total: ₹
-                  {cart.reduce((sum, i) => sum + i.price * i.qty, 0)}
-                </Typography>
-
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="error"
-                  sx={{ mt: 2 }}
-                  onClick={clearCart}
-                >
-                  Clear Cart
-                </Button>
-
-              </>
-            )}
-
-            <Button sx={{ mt: 2 }} onClick={() => setShowCart(false)}>
-              Close
-            </Button>
-          </Card>
-        )}
-
-         */}
 
 
 
@@ -736,32 +689,6 @@ function App() {
                         Purchase Now
                       </Button>
 
-                      {/* {isAdmin && (
-                        
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              setEditingId(s.id);
-                              setEditName(s.name);
-                              setEditPrice(s.price);
-                              setEditQuantity(s.quantity);
-                              setEditCategory(s.category);
-                            }}
-                          >
-                            Edit
-                          </Button>
-
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => deleteSweet(s.id)}
-                          >
-                            Delete
-                          </Button>
-                        </Stack> */}
                         {isAdmin && (
                         <>
                           {/* ADMIN RESTOCK */}
