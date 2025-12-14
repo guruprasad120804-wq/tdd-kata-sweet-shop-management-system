@@ -1,37 +1,62 @@
+"""
+Application entry point for the Sweet Shop API.
 
+This module:
+- Initializes the FastAPI application
+- Configures CORS
+- Creates database tables
+- Registers API routers
+"""
 
-# # {
-# #   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlzX2FkbWluIjp0cnVlLCJleHAiOjE3NjU1NjI1MTZ9.IWbzbQaJAZI-nesapytziKBaqF-hPn8aQIoF-qy6rGM",
-# #   "token_type": "bearer"
-
-# # -d '{"email":"admin@example.com","password":"pass1234"}'
-# # uvicorn app.main:app --reload -----------> run backend
-# #npm run dev ------------> run frontend
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine
 from app.auth import router as auth_router
+from app.database import Base, engine
 from app.sweets import router as sweets_router
 
+# -------------------------------------------------------------------
+# FastAPI application instance
+# -------------------------------------------------------------------
 app = FastAPI(title="Sweet Shop API")
 
-# create tables
+# -------------------------------------------------------------------
+# Database initialization
+# -------------------------------------------------------------------
+# Create all database tables on application startup.
+# This is acceptable for small projects and demos.
 Base.metadata.create_all(bind=engine)
 
-# CORS for frontend
+# -------------------------------------------------------------------
+# CORS configuration
+# -------------------------------------------------------------------
+# Allows the frontend (running on localhost) to communicate
+# with the backend API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# -------------------------------------------------------------------
+# Router registration
+# -------------------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(sweets_router)
 
-
+# -------------------------------------------------------------------
+# Health check endpoint
+# -------------------------------------------------------------------
 @app.get("/")
 def root():
+    """
+    Health check endpoint.
+
+    Returns a simple message to confirm that the API is running.
+    """
     return {"message": "Sweet Shop API running"}
