@@ -164,7 +164,7 @@ def delete_sweet(
     db.delete(sweet)
     db.commit()
 
-    return {"detail": "Sweet deleted successfully"}
+    return {"detail": "Sweet deleted"}
 
 
 # -------------------------------------------------------------------
